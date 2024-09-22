@@ -1,0 +1,12 @@
+transformers==4.44.0
+torch_geometric==2.5.3
+neo4j==5.22.0
+numpy==1.26.4
+pandas==2.2.2
+pcst_fast==1.0.10
+sentence-transformers==3.0.1
+python-dotenv==1.0.1
+sentencepiece==0.2.0
+python-dotenv
+fastapi==0.114.0
+uvicorn==0.30.6
