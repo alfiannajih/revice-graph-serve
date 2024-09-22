@@ -2,6 +2,7 @@ from transformers import pipeline
 import torch
 import os
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 
 from configuration import ConfigurationManager
 from kg_retrieval import Neo4JConnection, KnowledgeGraphRetrievalPipeline
@@ -25,62 +26,63 @@ PREDICTIONS_ROUTE = os.environ["AIP_PREDICT_ROUTE"]
 
 app = FastAPI()
 
-# class Resume(BaseModel):
-#     education: str
-#     experience: str
-#     project: str
-#     skill: str
-#     description: str
+class Resume(BaseModel):
+    education: str
+    experience: str
+    project: str
+    skill: str
+    description: str
 
-#     model_config = {
-#         "json_schema_extra": {
-#             "examples": [
-#                 {
-#                     "education": "bachelor degree of mathematics",
-#                     "experience": "data scientist intern at banking industry",
-#                     "project": "churn prediction",
-#                     "skill":  "python, pytorch",
-#                     "description": "I want to pursue my career in machine learning engineer",
-#                 }
-#             ]
-#         }
-#     }
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "education": "bachelor degree of mathematics",
+                    "experience": "data scientist intern at banking industry",
+                    "project": "churn prediction",
+                    "skill":  "python, pytorch",
+                    "description": "I want to pursue my career in machine learning engineer",
+                }
+            ]
+        }
+    }
 
-# class Generation(BaseModel):
-#     max_new_tokens: int
-#     temperature: float
-#     top_p: float
-#     do_sample: bool
+class Generation(BaseModel):
+    max_new_tokens: int
+    temperature: float
+    top_p: float
+    do_sample: bool
 
-#     model_config = {
-#         "json_schema_extra": {
-#             "examples": [
-#                 {
-#                     "max_new_tokens": 512,
-#                     "temperature": 1,
-#                     "top_p": 0.9,
-#                     "do_sample": True
-#                 }
-#             ]
-#         }
-#     }
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "max_new_tokens": 512,
+                    "temperature": 1,
+                    "top_p": 0.9,
+                    "do_sample": True
+                }
+            ]
+        }
+    }
 
-# class Prompt(BaseModel):
-#     resume: Resume
-#     generation: Generation
+class Prompt(BaseModel):
+    resume: Resume
+    generation: Generation
 
-# class Review(BaseModel):
-#     review: str
+class Review(BaseModel):
+    review: str
 
 @app.get(HEALTH_ROUTE, status_code=200)
 def health():
     return {"Healthy Server!"}
 
 @app.post(PREDICTIONS_ROUTE)
-async def predict(request: Request):
+async def predict(request: Prompt) -> Review:
     # input json is the Request and will be read into `instances`
-    body = await request.json()
-    content = body["instances"][0]
+    # body = await request.json()
+    # content = body["instances"][0]
+    content = request.model_dump()
     raw_resume = content["resume"]
     generate_kwargs = content["generation"]
 
@@ -105,7 +107,7 @@ async def predict(request: Request):
         **inputs
     )
 
-    return {"predictions": review}
+    return {"review": review}
 
 def create_resume(
         education, 
