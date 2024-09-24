@@ -1,4 +1,4 @@
-from transformers import pipeline
+from transformers import pipeline, BitsAndBytesConfig
 import torch
 import os
 from fastapi import FastAPI, Request
@@ -7,10 +7,23 @@ from pydantic import BaseModel
 from configuration import ConfigurationManager
 from kg_retrieval import Neo4JConnection, KnowledgeGraphRetrievalPipeline
 
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_compute_dtype=torch.bfloat16
+)
+
+model_kwargs = {
+    "quantization_config": bnb_config,
+    "device_map": "auto"
+}
+
 pipe = pipeline(
     "g-retriever-task",
     model=f"{os.environ['AIP_STORAGE_URI']}/g-retriever",
-    torch_dtype=torch.int8,
+    torch_dtype=torch.bfloat16,
+    model_kwargs=model_kwargs,
     trust_remote_code=True
 )
 config = ConfigurationManager()
